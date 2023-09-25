@@ -77,17 +77,15 @@ module "example" {
 
 In this example, we're using a module named "example" located in the `./modules/my-module` directory. We're also passing values to the module's variables `var1` and `var2`.
 
-### Real-World Module Examples
+## Real-World Module Examples
 
 To truly grasp the power of Terraform modules, let's dive into some real-world examples. In this section, we'll create two modules: one for provisioning an EC2 instance and another for creating a Security Group that we'll associate with the instance.
 
 ### The Security Group Module
 
-### Purpose
-
 The Security Group module is designed to encapsulate the creation of an AWS Security Group. Security Groups act as virtual firewalls for your EC2 instances, controlling inbound and outbound traffic.
 
-### Module Structure
+#### Module Structure
 
 Here's the directory structure for our Security Group module:
 
@@ -100,73 +98,76 @@ my-terraform-project/
         ├── outputs.tf
 ```
 
-### Variables
+#### Variables
 
 In `variables.tf`, we define the variables required to customize the Security Group:
 
 ```hcl
-variable "name" {
-  description = "The name of the Security Group."
-  type        = string
+variable "security_group_name" {
+  description = "Name of the security group"
 }
 
-variable "description" {
-  description = "A description of the Security Group."
-  type        = string
+variable "security_group_description" {
+  description = "Description of the security group"
 }
 
-variable "ingress_rules" {
-  description = "A list of ingress rules for the Security Group."
-  type        = list(object({
-    from_port   = number
-    to_port     = number
-    protocol    = string
-    cidr_blocks = list(string)
-  }))
-  default     = []
+variable "inbound_port" {
+  type        = list(any)
+  description = "List of inbound ports to allow"
+}
+
+variable "vpc_id" {
+  description = "ID of the VPC"
 }
 ```
 
-### Resources
+#### Resources
 
 In `main.tf`, we define the Security Group:
 
 ```hcl
-resource "aws_security_group" "example" {
-  name_prefix = var.name
-  description = var.description
+# Create a security 
+resource "aws_security_group" "security" {
+  name        = var.security_group_name
+  description = var.security_group_description
+  vpc_id      = var.vpc_id
 
+  # dynamic block who create two rules to allow inbound traffic 
   dynamic "ingress" {
-    for_each = var.ingress_rules
-
+    for_each = var.inbound_port
     content {
-      from_port   = ingress.value.from_port
-      to_port     = ingress.value.to_port
-      protocol    = ingress.value.protocol
-      cidr_blocks = ingress.value.cidr_blocks
+      from_port   = ingress.value
+      to_port     = ingress.value
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
     }
   }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
+
 ```
 
-### Outputs
+#### Outputs
 
 Our Security Group module exposes the Security Group's ID as an output in `outputs.tf`:
 
 ```hcl
 output "security_group_id" {
-  description = "The ID of the Security Group."
-  value       = aws_security_group.example.id
+  value = aws_security_group.security.id
 }
 ```
 
-## The EC2 Instance Module
-
-### Purpose
+### The EC2 Instance Module
 
 The EC2 instance module is designed to create an EC2 instance and associate it with the Security Group created using our Security Group module. This modular approach ensures that instances are launched with the necessary security configurations.
 
-### Module Structure
+#### Module Structure
 
 Here's the directory structure for our EC2 instance module:
 
@@ -179,52 +180,76 @@ my-terraform-project/
         ├── outputs.tf
 ```
 
-### Variables
+#### Variables
 
 In `variables.tf`, we define the variables required to customize the EC2 instance:
 
 ```hcl
-variable "instance_type" {
-  description = "Type of EC2 instance."
-  type        = string
-  default     = "t2.micro"
+variable "instance_name" {
+  description = "Name of the EC2 instance launched with this configuration"
+}
+
+variable "aws_subnet_id" {
+  description = "ID of the AWS subnet in which to launch the EC2 instance"
 }
 
 variable "ami" {
-  description = "ID of the Amazon Machine Image (AMI) to use for the instance."
+  description = "ID of the Amazon Machine Image (AMI) to use for the EC2 instance"
 }
 
-variable "security_group_name" {
-  description = "The name of the Security Group to associate with the EC2 instance."
-  type        = string
+variable "key_name" {
+  description = "Name of the SSH key pair to use for connecting to the EC2 instance"
+}
+
+variable "instance_type" {
+  description = "Type of EC2 instance to launch (e.g., t2.micro, m5.large, etc.)"
+}
+
+variable "iam_instance_profile_name" {
+  description = "Name of the IAM instance profile to associate with the EC2 instance"
+}
+
+variable "ebs_volume_size" {
+  description = "Size (in GB) of the EBS volume to attach to the EC2 instance"
+}
+
+variable "ec2_sg_id" {
+  description = "ID of the EC2 Security Group(s) to associate with the EC2 instance"
 }
 ```
 
-### Resources
+#### Resources
 
 In `main.tf`, we create the EC2 instance and associate it with the Security Group:
 
 ```hcl
-resource "aws_instance" "example" {
-  ami           = var.ami
-  instance_type = var.instance_type
+resource "aws_instance" "instance" {
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  subnet_id              = var.aws_subnet_id
+  vpc_security_group_ids = var.ec2_sg_id
+  key_name               = var.key_name
 
-  security_groups = [aws_security_group.example.name]
+  root_block_device {
+    volume_size           = var.ebs_volume_size
+    volume_type           = "gp3"
+    delete_on_termination = true
+  }
 
   tags = {
-    Name = "ExampleInstance"
+    Name = var.instance_name
   }
 }
+
 ```
 
-### Outputs
+#### Outputs
 
 Our EC2 instance module exposes the instance ID as an output in `outputs.tf`:
 
 ```hcl
-output "ec2_instance_id" {
-  description = "The ID of the EC2 instance."
-  value       = aws_instance.example.id
+output "instance_ip" {
+  value = aws_instance.instance.public_ip
 }
 ```
 
@@ -234,43 +259,49 @@ By structuring our Terraform code into these two modules, we achieve modularity 
 
 Now that we have created our Security Group and EC2 Instance modules, let's explore how to use them in a Terraform configuration.
 
-### Module Usage Example
-
-Below is an example of how you can use these modules in your Terraform configuration:
+In your Terraform configuration, you can use these modules as shown below:
 
 ```hcl
-module "my_security_group" {
-  source      = "./modules/security-group"
-  name        = "MySecurityGroup"
-  description = "My custom Security Group"
-  
-  ingress_rules = [
-    {
-      from_port   = 22
-      to_port     = 22
-      protocol    = "tcp"
-      cidr_blocks = ["0.0.0.0/0"]
-    }
-  ]
+# Define the VPC and Subnet data sources
+data "aws_vpc" "myvpc" {
+  id = "vpc-0c7a48ffa82b8c7ae"
 }
 
-module "my_ec2_instance" {
-  source             = "./modules/ec2-instance"
-  instance_type      = "t2.micro"
-  ami                = "ami-0123456789abcdef0"
-  security_group_name = module.my_security_group.name
+data "aws_subnet" "mysubnet" {
+  id = "subnet-0c819740100e5e234"
+}
+
+# Create the Security Group for EC2 instances
+module "security_group_ec2" {
+  source                     = "./modules/security-group"
+  security_group_name        = "myec2-sg"
+  security_group_description = "EC2 Security Group"
+  inbound_port               = [8080, 22]
+  vpc_id                     = data.aws_vpc.myvpc.id
+}
+
+# Provision an EC2 instance
+module "myec2" {
+  source                    = "./modules/ec2-instance"
+  aws_subnet_id             = data.aws_subnet.mysubnet.id
+  instance_name             = "EC2"
+  ami                       = "ami-08766f81ab52792ce"
+  key_name                  = "kemane"
+  instance_type             = "t3.micro"
+  ebs_volume_size           = 30
+  ec2_sg_id                 = [module.security_group_ec2.security_group_id]
 }
 ```
 
 In this example:
 
-- We use the `module` block to declare instances of our Security Group and EC2 Instance modules.
-- For the Security Group module, we specify the `source` as `"./modules/security-group"` to reference the module's location in the directory structure.
-- We provide values for the `name`, `description`, and `ingress_rules` variables, customizing the Security Group to our requirements.
-- Similarly, for the EC2 Instance module, we specify the `source` as `"./modules/ec2-instance"`.
-- We pass values for `instance_type`, `ami`, and `security_group_name` to configure the EC2 instance. The `security_group_name` variable is set to the `name` output of the Security Group module, ensuring that the instance is associated with the correct Security Group.
+- We first define data sources for the VPC and Subnet that your EC2 instance will be associated with.
 
-By adopting these modules, you can efficiently manage the security and provisioning of your EC2 instances while ensuring consistency and security best practices.
+- Next, we use the `module` block to create an instance of our Security Group module named "security_group_ec2." We specify the necessary parameters such as the `security_group_name`, `security_group_description`, `inbound_port`, and `vpc_id` to customize the Security Group.
+
+- Finally, we provision an EC2 instance using the "myec2" module. We pass in the required parameters like `aws_subnet_id`, `instance_name`, `ami`, `key_name`, `instance_type`, `ebs_volume_size`, and `ec2_sg_id`. The `ec2_sg_id` parameter is set to the `security_group_id` output of the **security_group_ec2** module, ensuring that the EC2 instance is associated with the correct Security Group.
+
+By adopting these modules and using this configuration, you can efficiently manage the security and provisioning of your EC2 instances while ensuring consistency and security best practices.
 
 # Conclusion
 

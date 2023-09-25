@@ -4,8 +4,6 @@ resource "aws_instance" "instance" {
   subnet_id              = var.aws_subnet_id
   vpc_security_group_ids = var.ec2_sg_id
   key_name               = var.key_name
-  user_data              = file("${path.module}/${var.userdata}")
-  iam_instance_profile   = var.iam_instance_profile_name
 
   root_block_device {
     volume_size           = var.ebs_volume_size

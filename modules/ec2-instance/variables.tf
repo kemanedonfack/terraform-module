@@ -18,10 +18,6 @@ variable "instance_type" {
   description = "Type of EC2 instance to launch (e.g., t2.micro, m5.large, etc.)"
 }
 
-variable "iam_instance_profile_name" {
-  description = "Name of the IAM instance profile to associate with the EC2 instance"
-}
-
 variable "ebs_volume_size" {
   description = "Size (in GB) of the EBS volume to attach to the EC2 instance"
 }
@@ -30,6 +26,3 @@ variable "ec2_sg_id" {
   description = "ID of the EC2 Security Group(s) to associate with the EC2 instance"
 }
 
-variable "userdata" {
-  description = "Name of the userdata file to use for EC2 instance initialization"
-}
