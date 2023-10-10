@@ -1,12 +1,10 @@
-# Demystifying Terraform Modules&nbsp;[![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fnumerica-ideas%2Fcommunity%2Ftree%2Fmaster%2Fterraform-modules&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://blog.numericaideas.com/terraform-modules)
+# Demystifying Terraform Modules
 
 **This article was originally written by "Kemane Donfack" on the blog**: https://blog.numericaideas.com/terraform-modules
 
 In the world of Infrastructure as Code (IaC), Terraform is a leading tool for managing and provisioning resources across various cloud providers. It empowers DevOps teams to define infrastructure in a declarative manner, ensuring consistent and reproducible deployments. Key to Terraform's capabilities are **modules**, which play a pivotal role in creating scalable and maintainable infrastructure code.
 
 [![FeaturedImage](./images/Terraform-Modules.png)](https://blog.numericaideas.com/terraform-modules)
-
-> The **YouTube Channels** in both English (En) and French (Fr) are now accessible, feel free to subscribe by clicking [here](https://www.youtube.com/@numericaideas/channels?sub_confirmation=1).
 
 ## Prerequisites
 
@@ -352,23 +350,14 @@ Once completed, your infrastructure should resemble the image displayed below:
 
 ![Infrastructure](./images/infrastructure.png)
 
-The complete source code of the project is available on [GitHub](https://github.com/numerica-ideas/community/tree/master/terraform/terraform-modules).
+The complete source code of the project is available on [GitHub]().
 
 In order to better your DevOps skills, learn [How To Deploy WordPress on a 2-Tier AWS Architecture using Terraform](https://blog.numericaideas.com/deploy-wordpress-2-tier-aws-architecture-with-terraform) by following this practical workshop:
 
 [![FeaturedImage](../deploy-wordpress-2tier-aws-architecture-with-terraform/images/Deploying-WordPress-on-a-2-Tier-AWS-Architecture-with-Terraform.png)](https://blog.numericaideas.com/deploy-wordpress-2-tier-aws-architecture-with-terraform)
-
-———————
-
-We have just started our journey to build a network of professionals to grow our free knowledge-sharing community that will allow you to learn exciting things about topics like cloud computing, software development, and software architectures while keeping the door open to more opportunities.
-
-Does this speak to you? If **YES**, feel free to [Join our Discord Server](https://discord.numericaideas.com) to stay in touch with the community and be part of independently organized events.
-
-———————
 
 
 # Conclusion
 
 Terraform modules are fundamental for creating maintainable and scalable Infrastructure as Code. They allow encapsulation of infrastructure components, promote reusability, and simplify the management of complex resources. Mastering Terraform modules enhances your ability to provision and manage infrastructure efficiently, making you a more effective DevOps engineer.
 
-Thanks for reading this article. Like, recommend, and share if you enjoyed it. Follow us on [Facebook](https://www.facebook.com/numericaideas), [Twitter](https://twitter.com/numericaideas), and [LinkedIn](https://www.linkedin.com/company/numericaideas) for more content.
